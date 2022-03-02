@@ -125,6 +125,37 @@ impl Context {
             }
         }
     }
+
+	 pub fn set_parameters2(&mut self, parameters: Parameters) -> Result<(), Error> {
+        unsafe {
+            match avcodec_parameters_to_context(self.as_mut_ptr(), parameters.as_ptr()) {
+                e if e < 0 => Err(Error::from(e)),
+                _ => Ok(()),
+            }
+        }
+	 }
+
+	 pub fn parameters(&self) -> Option<Parameters> {
+
+		  let mut parameters = Parameters::new();
+
+		  // fetch parameters from contexts
+		  unsafe {
+				match avcodec_parameters_from_context(parameters.as_mut_ptr(), self.as_ptr()) {
+					 e if e < 0 => None,
+					 _ => {
+						  // clone parameters from extracted parameters from contexts
+						  // the clone function will calls
+						  //
+						  // Parameters will call AVParameters::clone_from
+						  // and will call avcodec_paremeters_copy which is actually safe
+						  // since it does deep-copy of a value, thus it should be safe
+						  //
+						  Some(Parameters::clone(&parameters))
+					 }
+				}
+		  }
+	 }
 }
 
 impl Default for Context {
